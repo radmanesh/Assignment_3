@@ -19,7 +19,7 @@
 #SBATCH --error=nllm_%j.err
 #SBATCH --mail-user=radmanesh@ou.edu
 #SBATCH --mail-type=ALL
-#SBATCH --chdir=/home/cs529329/assignment_3
+#SBATCH --chdir=/home/cs529329/Assignment_3/src
 #SBATCH --output=results/exp2_%j_stdout.txt
 #SBATCH --error=results/exp2_%j_stderr.txt
 ##SBATCH --array=0-4    # the double ## means that this line is ignored
@@ -29,9 +29,6 @@ module load Python/3.10.4-GCCcore-11.3.0
 
 # Activate your conda environment if you're using one
 # source activate cs5293-3
-
-# Change to the directory containing your script
-cd $SLURM_SUBMIT_DIR
 
 # Print job information
 echo "Job ID: $SLURM_JOB_ID"
@@ -52,75 +49,23 @@ python nllm.py ../data/training.txt ../data/test.txt ../data/seeds.txt \
     --lr 0.01 \
     --seed 1
 
-# Rename output files for this experiment
-mv ngram-prob.trace ngram-prob_exp1.trace
-mv ngram-gen.trace ngram-gen_exp1.trace
-mv ngram_model.pth ngram_model_exp1.pth
-
-# Experiment 2: Larger embeddings
-echo ""
-echo "Experiment 2: Larger embeddings (context=2, embed=50, hidden=128)"
+echo "Experiment 2: Bigger Contxt (context=5, embed=10, hidden=128)"
 python nllm.py ../data/training.txt ../data/test.txt ../data/seeds.txt \
-    --context_size 2 \
-    --embedding_dim 50 \
+    --context_size 5 \
+    --embedding_dim 10 \
     --hidden_size 128 \
     --epochs 10 \
     --batch_size 32 \
     --lr 0.01 \
     --seed 1
 
-mv ngram-prob.trace ngram-prob_exp2.trace
-mv ngram-gen.trace ngram-gen_exp2.trace
-mv ngram_model.pth ngram_model_exp2.pth
-
-# Experiment 3: Larger context
-echo ""
-echo "Experiment 3: Larger context (context=5, embed=50, hidden=128)"
+echo "Experiment 3: Bigger Context and Dimentions (context=20, embed=40, hidden=256, epochs=20)"
 python nllm.py ../data/training.txt ../data/test.txt ../data/seeds.txt \
-    --context_size 5 \
-    --embedding_dim 50 \
-    --hidden_size 128 \
-    --epochs 10 \
-    --batch_size 32 \
-    --lr 0.01 \
-    --seed 1
-
-mv ngram-prob.trace ngram-prob_exp3.trace
-mv ngram-gen.trace ngram-gen_exp3.trace
-mv ngram_model.pth ngram_model_exp3.pth
-
-# Experiment 4: Larger hidden layer
-echo ""
-echo "Experiment 4: Larger hidden layer (context=5, embed=50, hidden=256)"
-python nllm.py ../data/training.txt ../data/test.txt ../data/seeds.txt \
-    --context_size 5 \
-    --embedding_dim 50 \
-    --hidden_size 256 \
-    --epochs 10 \
-    --batch_size 32 \
-    --lr 0.01 \
-    --seed 1
-
-mv ngram-prob.trace ngram-prob_exp4.trace
-mv ngram-gen.trace ngram-gen_exp4.trace
-mv ngram_model.pth ngram_model_exp4.pth
-
-# Experiment 5: More training epochs with lower learning rate
-echo ""
-echo "Experiment 5: More epochs, lower LR (context=5, embed=50, hidden=256, epochs=20, lr=0.005)"
-python nllm.py ../data/training.txt ../data/test.txt ../data/seeds.txt \
-    --context_size 5 \
-    --embedding_dim 50 \
+    --context_size 20 \
+    --embedding_dim 40 \
     --hidden_size 256 \
     --epochs 20 \
-    --batch_size 32 \
-    --lr 0.005 \
+    --batch_size 64 \
+    --lr 0.01 \
     --seed 1
 
-mv ngram-prob.trace ngram-prob_exp5.trace
-mv ngram-gen.trace ngram-gen_exp5.trace
-mv ngram_model.pth ngram_model_exp5.pth
-
-echo ""
-echo "End time: $(date)"
-echo "All experiments completed!"
