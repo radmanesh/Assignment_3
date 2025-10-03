@@ -1,0 +1,5 @@
+torch==2.8.0
+numpy
+nltk
+datasets
+matplotlib
