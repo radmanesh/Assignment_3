@@ -1,0 +1,5 @@
+src/ngram_model.pth
+src/ngram-gen.trace
+src/ngram-prob.trace
+src/vocab.pkl
+src/word_to_ix.pkl
