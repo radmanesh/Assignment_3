@@ -83,7 +83,12 @@ class NGramLanguageModelerBatch(nn.Module):
         Returns:
             log_probs: Tensor of shape (batch_size, vocab_size) with log probabilities
         """
-        embeds = self.embeddings(inputs).view((1, -1))
+        # Convert input word indices to embeddings: shape -> (batch_size, context_size, embedding_dim)
+        embeds = self.embeddings(inputs)
+        # Flatten embeddings for each example in the batch while preserving batch dimension:
+        # resulting shape -> (batch_size, context_size * embedding_dim)
+        embeds = embeds.view(inputs.size(0), -1)
+        # Apply first linear layer + ReLU non-linearity
         out = F.relu(self.linear1(embeds))
         out = self.linear2(out)
         log_probs = F.log_softmax(out, dim=1)
@@ -265,9 +270,12 @@ def generate_text(model, start_words, word_to_ix, ix_to_word, context_size=2,
             topk_probs = topk_probs / torch.sum(topk_probs)
 
             # Sample one index from top k
-            next_word_idx = torch.multinomial(topk_probs, 1).item()
-            # Get corresponding word
-            next_word = ix_to_word[topk_indices[next_word_idx].item()]
+            # Sample an index within the top-k (as a Python int)
+            sampled_pos = int(torch.multinomial(topk_probs, 1).item())
+            # Get the vocabulary index at the sampled position (convert tensor to int)
+            vocab_idx = int(topk_indices[sampled_pos].item())
+            # Get corresponding word from index-to-word mapping
+            next_word = ix_to_word[vocab_idx]
 
             generated_words.append(next_word)
 
