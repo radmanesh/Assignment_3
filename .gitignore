@@ -4,3 +4,7 @@ src/ngram-prob.trace
 src/vocab.pkl
 src/word_to_ix.pkl
 src/__pycache__/
+notebooks/ngram_model.pth
+notebooks/vocab.pkl
+notebooks/word_to_ix.pkl
+.gitignore

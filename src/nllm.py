@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Neural N-gram Language Model (NLLM)
+Neural N-gram Language Model (NNLM)
 This script trains a neural n-gram language model using PyTorch,
 calculates log-probabilities for test sentences, and generates text from seed words.
 
@@ -84,14 +84,7 @@ class NGramLanguageModelerBatch(nn.Module):
             log_probs: Tensor of shape (batch_size, vocab_size) with log probabilities
         """
         # Convert input word indices to embeddings: shape -> (batch_size, context_size, embedding_dim)
-        embeds = self.embeddings(inputs)
-        # Flatten embeddings for each example in the batch while preserving batch dimension:
-        # resulting shape -> (batch_size, context_size * embedding_dim)
-        embeds = embeds.view(inputs.size(0), -1)
-        # Apply first linear layer + ReLU non-linearity
-        out = F.relu(self.linear1(embeds))
-        out = self.linear2(out)
-        log_probs = F.log_softmax(out, dim=1)
+        log_probs = self.model(inputs)
         return log_probs
 
 
