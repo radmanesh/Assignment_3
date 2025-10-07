@@ -25,6 +25,13 @@
 #################################################
 
 # NOTE, make sure you change your directory!
+export MAMBA_ROOT_PREFIX="/scratch/cs529329/micromamba"
+
+MM="/scratch/cs529329/micromamba/bin/micromamba"
+
+eval "$("$MM" shell hook -s bash)"
+
+micromamba activate cs5293-3
 
 python nllm.py ../data/training.txt ../data/test.txt ../data/seeds.txt \
 
