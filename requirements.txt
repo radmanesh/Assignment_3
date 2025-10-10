@@ -6,3 +6,4 @@ datasets
 matplotlib
 scikit-learn
 spacy
+wandb
