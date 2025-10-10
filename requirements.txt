@@ -1,5 +1,8 @@
 torch
+gensim
 numpy
 nltk
 datasets
 matplotlib
+scikit-learn
+spacy
