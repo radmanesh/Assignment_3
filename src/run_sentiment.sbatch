@@ -57,8 +57,8 @@ python sentiment_classifier.py --model lstm --embedding_dim 50 --embedding rando
 echo "Experiment 4: Model: LSTM, Embedding: GloVe, Embedding Dim: 50, Hidden Dim: 128"
 python sentiment_classifier.py --model lstm --embedding_dim 50 --embedding glove --hidden_size 128
 
-echo "Experiment 5: Model: LSTM, Embedding: GloVe, Embedding Dim: 300, Hidden Dim: 512"
-python sentiment_classifier.py --model lstm --embedding_dim 300 --embedding glove --glove_path ../data/glove.840B.300d.txt --hidden_size 512
+echo "Experiment 5: Model: LSTM, Embedding: GloVe, Embedding Dim: 300, Hidden Dim: 128"
+python sentiment_classifier.py --model lstm --embedding_dim 300 --embedding glove --glove_path ../data/glove.840B.300d.txt --hidden_size 128
 
-echo "Experiment 6: Model: LSTM, Embedding: Gensim, Embedding Dim: 300, Hidden Dim: 512"
-python sentiment_classifier.py --model lstm --embedding_dim 300 --embedding gensim --hidden_size 512
+echo "Experiment 6: Model: LSTM, Embedding: Gensim, Embedding Dim: 300, Hidden Dim: 128"
+python sentiment_classifier.py --model lstm --embedding_dim 300 --embedding gensim --hidden_size 128
