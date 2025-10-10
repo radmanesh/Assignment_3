@@ -8,3 +8,6 @@ notebooks/ngram_model.pth
 notebooks/vocab.pkl
 notebooks/word_to_ix.pkl
 .gitignore
+src/**/*.log
+src/wandb/latest-run
+src/wandb/*

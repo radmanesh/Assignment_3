@@ -25,7 +25,13 @@
 ##SBATCH --array=0-4    # the double ## means that this line is ignored
 
 # Load required modules
-module load Python/3.10.4-GCCcore-11.3.0
+export MAMBA_ROOT_PREFIX="/scratch/cs529329/micromamba"
+
+MM="/scratch/cs529329/micromamba/bin/micromamba"
+
+eval "$("$MM" shell hook -s bash)"
+
+micromamba activate cs5293-3
 
 # Activate your conda environment if you're using one
 # source activate cs5293-3
@@ -39,7 +45,7 @@ echo ""
 
 # Run the neural n-gram language model with different hyperparameters
 # Experiment 1: context_size=2, embedding_dim=10 (baseline from notebook)
-echo "Experiment 1: Baseline (context=2, embed=10, hidden=128)"
+echo "Experiment 1: Baseline (context=2, embed=10, hidden=128, lr=0.01)"
 python nllm.py ../data/training.txt ../data/test.txt ../data/seeds.txt \
     --context_size 2 \
     --embedding_dim 10 \
@@ -49,7 +55,7 @@ python nllm.py ../data/training.txt ../data/test.txt ../data/seeds.txt \
     --lr 0.01 \
     --seed 1
 
-echo "Experiment 2: Bigger Contxt (context=5, embed=10, hidden=128)"
+echo "Experiment 2: Bigger Context (context=5, embed=10, hidden=128, lr=0.01)"
 python nllm.py ../data/training.txt ../data/test.txt ../data/seeds.txt \
     --context_size 5 \
     --embedding_dim 10 \
@@ -59,13 +65,23 @@ python nllm.py ../data/training.txt ../data/test.txt ../data/seeds.txt \
     --lr 0.01 \
     --seed 1
 
-echo "Experiment 3: Bigger Context and Dimentions (context=20, embed=40, hidden=256, epochs=20)"
+echo "Experiment 3: Bigger Context and Dimentions (context=20, embed=40, hidden=256, lr=0.01)"
 python nllm.py ../data/training.txt ../data/test.txt ../data/seeds.txt \
     --context_size 20 \
     --embedding_dim 40 \
     --hidden_size 256 \
-    --epochs 20 \
-    --batch_size 64 \
+    --epochs 10 \
+    --batch_size 32 \
     --lr 0.01 \
+    --seed 1
+
+echo "Experiment 4: Larger Model (context=10, embed=10, hidden=128, lr=0.05)"
+python nllm.py ../data/training.txt ../data/test.txt ../data/seeds.txt \
+    --context_size 10 \
+    --embedding_dim 10 \
+    --hidden_size 128 \
+    --epochs 10 \
+    --batch_size 32 \
+    --lr 0.05 \
     --seed 1
 
