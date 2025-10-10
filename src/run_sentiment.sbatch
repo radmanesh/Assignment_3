@@ -46,19 +46,19 @@ echo "Working directory: $(pwd)"
 echo ""
 
 echo "Experiment 1: Model: DAN, Embedding: Random, Embedding Dim: 50, Hidden Dim: 128"
-python sentiment_classifier.py --model dan --embedding_dim 50 --embedding random --hidden_dim 128
+python sentiment_classifier.py --model dan --embedding_dim 50 --embedding random --hidden_size 128
 
 echo "Experiment 2: Model: DAN, Embedding: GloVe, Embedding Dim: 50, Hidden Dim: 128"
-python sentiment_classifier.py --model dan --embedding_dim 50 --embedding glove --hidden_dim 128
+python sentiment_classifier.py --model dan --embedding_dim 50 --embedding glove --hidden_size 128
 
 echo "Experiment 3: Model: LSTM, Embedding: Random, Embedding Dim: 50, Hidden Dim: 128"
-python sentiment_classifier.py --model lstm --embedding_dim 50 --embedding random --hidden_dim 128
+python sentiment_classifier.py --model lstm --embedding_dim 50 --embedding random --hidden_size 128
 
 echo "Experiment 4: Model: LSTM, Embedding: GloVe, Embedding Dim: 50, Hidden Dim: 128"
-python sentiment_classifier.py --model lstm --embedding_dim 50 --embedding glove --hidden_dim 128
+python sentiment_classifier.py --model lstm --embedding_dim 50 --embedding glove --hidden_size 128
 
 echo "Experiment 5: Model: LSTM, Embedding: GloVe, Embedding Dim: 300, Hidden Dim: 512"
-python sentiment_classifier.py --model lstm --embedding_dim 300 --embedding glove --glove_path ../data/glove.840B.300d.txt --hidden_dim 512
+python sentiment_classifier.py --model lstm --embedding_dim 300 --embedding glove --glove_path ../data/glove.840B.300d.txt --hidden_size 512
 
 echo "Experiment 6: Model: LSTM, Embedding: Gensim, Embedding Dim: 300, Hidden Dim: 512"
-python sentiment_classifier.py --model lstm --embedding_dim 300 --embedding gensim --hidden_dim 512
+python sentiment_classifier.py --model lstm --embedding_dim 300 --embedding gensim --hidden_size 512
