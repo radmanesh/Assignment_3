@@ -51,6 +51,7 @@ Examples:
 """
 
 import argparse
+import datetime
 import random
 import numpy as np
 import torch
@@ -62,6 +63,8 @@ import spacy
 from datasets import load_dataset
 import wandb
 from gensim.models import Word2Vec
+import matplotlib.pyplot as plt
+import seaborn as sns  # Import seaborn for heatmap visualization
 
 # Load spaCy model for tokenization
 try:
@@ -259,7 +262,7 @@ class LSTMClassifier(nn.Module):
             hidden_size,
             num_layers=num_layers,
             dropout=dropout if num_layers > 1 else 0,
-            batch_first=False
+            batch_first=True
         )
 
         # Dropout layer after LSTM for regularization
@@ -319,15 +322,16 @@ class LSTMClassifier(nn.Module):
             # Reorder embeddings based on sorted indices
             input_embeds_sorted = input_embeds[sorted_idx]
 
-            # Permute to (seq_len, batch_size, embedding_length) for LSTM
-            # LSTM expects (seq_len, batch, feature) when batch_first=False
-            input_embeds_sorted = input_embeds_sorted.permute(1, 0, 2)
+            # Clamp minimum length to 1 to avoid errors with empty sequences
+            sorted_lengths_clamped = sorted_lengths.clamp(min=1)
 
             # Pack sequences: only processes actual tokens, skips padding
+            # This significantly speeds up training and improves gradient flow
             packed_input = nn.utils.rnn.pack_padded_sequence(
                 input_embeds_sorted,
-                sorted_lengths.clamp(min=1),  # Ensure minimum length of 1
-                batch_first=False
+                sorted_lengths_clamped,
+                batch_first=True,  # Now True since we changed LSTM to batch_first=True
+                enforce_sorted=True  # We already sorted, so enforce it
             )
 
             # LSTM forward pass on packed sequences
@@ -342,16 +346,12 @@ class LSTMClassifier(nn.Module):
 
         else:
             # No lengths provided: process all tokens (including padding)
-            # Permute to (seq_len, batch_size, embedding_length) for LSTM
-            input_embeds = input_embeds.permute(1, 0, 2)
-
-            # LSTM forward pass
-            # output: (seq_len, batch_size, hidden_size) - outputs at each time step
-            # final_hidden_state: (num_layers, batch_size, hidden_size) - final hidden state
-            # final_cell_state: (num_layers, batch_size, hidden_size) - final cell state
+            # This is less efficient but works as fallback
+            # input_embeds shape: (batch_size, seq_len, embedding_length)
             output, (final_hidden_state, final_cell_state) = self.lstm(input_embeds, (h_0, c_0))
 
         # Use final hidden state from the last LSTM layer for classification
+        # final_hidden_state shape: (num_layers, batch_size, hidden_size)
         # final_hidden_state[-1]: (batch_size, hidden_size) - last layer's hidden state
         lstm_out = final_hidden_state[-1]  # (batch_size, hidden_size)
 
@@ -928,6 +928,19 @@ def main():
     print("\nConfusion Matrix:")
     cm = confusion_matrix(test_labels, test_preds)
     print(cm)
+
+    # Create a heatmap for the confusion matrix and save it to wandb
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=label_names, yticklabels=label_names)  # Plot confusion matrix heatmap
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
+    plt.title(f'Confusion Matrix {args.model.upper()} Model {args.embedding.upper()} Embeddings {args.embedding_dim}d {args.hidden_size}h')
+    plt.tight_layout()
+    wandb.log({"confusion_matrix": wandb.Image(plt)})
+    # save to a local file with date-time stamp miliseconds
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    plt.savefig(f'confusion_matrix_h_{timestamp}.png')
+    plt.close()
 
     # Print summary
     print("\n" + "="*80)

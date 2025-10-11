@@ -4,6 +4,7 @@ numpy
 nltk
 datasets
 matplotlib
+seaborn
 scikit-learn
 spacy
 wandb
