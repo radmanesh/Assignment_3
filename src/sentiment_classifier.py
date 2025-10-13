@@ -214,7 +214,7 @@ class LSTMClassifier(nn.Module):
     """
     Improved LSTM-based sentiment classifier.
 
-    Uses unidirectional (left-to-right) LSTM to encode sequences with dropout regularization.
+    Uses unidirectional (left-to-right) LSTM to encode sequences.
     Processes variable-length sequences efficiently using pack_padded_sequence.
     """
 
@@ -229,7 +229,7 @@ class LSTMClassifier(nn.Module):
             vocab_size: Total number of unique words in vocabulary
             embedding_length: Dimensionality of word embeddings
             weights: Pre-trained embedding weights (optional, can be None for random init)
-            dropout: Dropout rate for regularization (default: 0.3)
+            dropout: Dropout rate (kept for API compatibility but not used)
             num_layers: Number of stacked LSTM layers (default: 1)
         """
         super(LSTMClassifier, self).__init__()
@@ -240,7 +240,6 @@ class LSTMClassifier(nn.Module):
         self.vocab_size = vocab_size  # Vocabulary size
         self.embedding_length = embedding_length  # Embedding dimension
         self.num_layers = num_layers  # Number of LSTM layers
-        self.dropout_rate = dropout  # Dropout rate for regularization
 
         # Word embedding layer: maps word indices to dense vectors
         # padding_idx=0 ensures padding tokens have zero embeddings
@@ -248,36 +247,21 @@ class LSTMClassifier(nn.Module):
 
         # Initialize with pre-trained embeddings if provided
         if weights is not None:
-            # Set embedding weights (frozen to prevent training)
             self.word_embeddings.weight = nn.Parameter(weights, requires_grad=False)
 
-        # Dropout layer for embedding regularization
-        self.embedding_dropout = nn.Dropout(dropout)
-
         # Multi-layer LSTM: processes sequences (seq_len, batch_size, embedding_length)
-        # Note: batch_first=False, so input should be (seq_len, batch, feature)
-        # dropout applies dropout between LSTM layers (only if num_layers > 1)
+        # Note: batch_first=True for easier handling
         self.lstm = nn.LSTM(
             embedding_length,
             hidden_size,
             num_layers=num_layers,
-            dropout=dropout if num_layers > 1 else 0,
+            dropout=0,
             batch_first=True
         )
 
-        # Dropout layer after LSTM for regularization
-        self.dropout = nn.Dropout(dropout)
-
-        # Additional fully connected layer for better representation learning
         self.fc = nn.Linear(hidden_size, hidden_size)
-
-        # Batch normalization for stable training
         self.batch_norm = nn.BatchNorm1d(hidden_size)
-
-        # ReLU activation function
         self.relu = nn.ReLU()
-
-        # Output layer: maps LSTM hidden state to class scores
         self.label = nn.Linear(hidden_size, output_size)
 
     def forward(self, input_sentence, batch_size=None, lengths=None):
@@ -294,39 +278,19 @@ class LSTMClassifier(nn.Module):
         Returns:
             final_output: Tensor of shape (batch_size, output_size) with class scores
         """
-        # Get word embeddings: (batch_size, seq_len, embedding_length)
         input_embeds = self.word_embeddings(input_sentence)
-
-        # Apply dropout to embeddings for regularization
-        input_embeds = self.embedding_dropout(input_embeds)
-
-        # Determine current batch size (use provided or default)
         current_batch_size = batch_size if batch_size is not None else self.batch_size
 
-        # Get device (CPU or CUDA) from input tensor
         device = input_sentence.device
 
-        # Initialize hidden state: (num_layers, batch_size, hidden_size)
         h_0 = torch.zeros(self.num_layers, current_batch_size, self.hidden_size).to(device)
-
-        # Initialize cell state: (num_layers, batch_size, hidden_size)
         c_0 = torch.zeros(self.num_layers, current_batch_size, self.hidden_size).to(device)
 
-        # Use pack_padded_sequence for efficient processing if lengths are provided
         if lengths is not None:
-            # Sort sequences by length (required for pack_padded_sequence)
-            # This avoids processing padding tokens
             lengths_cpu = lengths.cpu()
             sorted_lengths, sorted_idx = lengths_cpu.sort(0, descending=True)
-
-            # Reorder embeddings based on sorted indices
             input_embeds_sorted = input_embeds[sorted_idx]
-
-            # Clamp minimum length to 1 to avoid errors with empty sequences
             sorted_lengths_clamped = sorted_lengths.clamp(min=1)
-
-            # Pack sequences: only processes actual tokens, skips padding
-            # This significantly speeds up training and improves gradient flow
             packed_input = nn.utils.rnn.pack_padded_sequence(
                 input_embeds_sorted,
                 sorted_lengths_clamped,
@@ -340,7 +304,6 @@ class LSTMClassifier(nn.Module):
             # final_cell_state: (num_layers, batch_size, hidden_size) - final cell state
             packed_output, (final_hidden_state, final_cell_state) = self.lstm(packed_input, (h_0, c_0))
 
-            # Restore original order of sequences
             _, unsorted_idx = sorted_idx.sort(0)
             final_hidden_state = final_hidden_state[:, unsorted_idx, :]
 
@@ -350,28 +313,11 @@ class LSTMClassifier(nn.Module):
             # input_embeds shape: (batch_size, seq_len, embedding_length)
             output, (final_hidden_state, final_cell_state) = self.lstm(input_embeds, (h_0, c_0))
 
-        # Use final hidden state from the last LSTM layer for classification
-        # final_hidden_state shape: (num_layers, batch_size, hidden_size)
-        # final_hidden_state[-1]: (batch_size, hidden_size) - last layer's hidden state
-        lstm_out = final_hidden_state[-1]  # (batch_size, hidden_size)
-
-        # Apply dropout for regularization
-        lstm_out = self.dropout(lstm_out)
-
-        # Pass through additional fully connected layer
-        fc_out = self.fc(lstm_out)  # (batch_size, hidden_size)
-
-        # Apply batch normalization for stable training
-        fc_out = self.batch_norm(fc_out)
-
-        # Apply ReLU activation
+        lstm_out = final_hidden_state[-1]
+        fc_out = self.fc(lstm_out)
+        fc_out = self.batch_norm(fc_out) # Apply batch normalization for stable training
         fc_out = self.relu(fc_out)
-
-        # Apply dropout again
-        fc_out = self.dropout(fc_out)
-
-        # Final classification layer
-        final_output = self.label(fc_out)  # (batch_size, output_size)
+        final_output = self.label(fc_out)
 
         return final_output
 
